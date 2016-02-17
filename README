@@ -1,0 +1,277 @@
+Description
+===========
+
+This project builds a number of programs for performing calculations
+using 2D molecular fingerprints.  In reality, I suppose, they can deal
+with any arbitrary bitstrings, but they were designed for use with
+fingerprints from the now defunct Daylight Chemical Information
+Systems.  That was in 1995.  The programs have changed, but the basic
+philosophy remains the same.
+
+There are 2 main programs, cluster, for clustering, and satan, for
+performing neighbourhood analysis.  There are also a number of
+ancillary programs that have accumulated over the years.
+
+NB, all these programs use a distance rather than a similarity
+measure.  Normally it's 1.0 - Td, where Td is the Tanimoto
+similarity.  There's also the option of doing neighbourhood analysis
+with 1.0 - Tv, there Tv is the Tversky similarity.  In normal mode, a
+distance of 0.0 means the fingerprints are identical (Tanimoto
+similarity of 1.0) and 1.0 means 2 fingerprints have no set bits in
+common.  I just find it easier to think in distances rather than
+similarities, and people at AZ have got used to it!
+
+File Formats
+============
+
+By default, all the programs below expect fingerprints in a binary
+file of a format of my own devising, called the flush file or flush
+format.  Being binary, I/O is very quick but they are otherwise rather
+inconvenient.  You can't check them visually other than via od, you
+can't cat 2 together etc.  The programs can also read ASCII bitstring
+files, with no or an arbitrary separator between bits.  In the
+test_dir directory, there's a bit of Chembl v20, and a python script
+that will read it and write an OE path fingerprint to bitstring in a
+format that other programs can read.  If you want to take advantage of
+the faster I/O afforded by the binary format, you can use the program
+merge_fp_files to convert it.
+
+The Programs
+============
+
+Originally the neighbourhood analysis was done at AZ using a program
+called flush.  This was so called because it was intended to help you
+flush the rubbish out of your screening results.  This is why the
+binary file format is called the flush format.
+
+At AZ we have our own fingerprint creation program, AlFi (3), which
+makes a fingerprint similar in ethos and performance to the original
+Daylight one and writes it into a flush format file.  This program is
+not available through the OpenEye contrib area because OE have their
+own fingerprint product and it seemed a bit unsporting to undercut
+them by putting a free one in their contrib.  In the test_dir
+directory there's a test file containing foyfi fingerprints generated
+by AlFi for a portion of Chembl v20.
+
+All the programs will produce useful help text if run with no
+arguments or with --help on the command line.
+
+Program cluster
+---------------
+This is an implementation of what we at AZ think of as Robin Taylor's
+algorithm(1), but is now more commonly known as the Taylor/Butina(2)
+algorithm. It's a straightforward algorithm, which requires a
+threshold distance.  Neighbourlists are created for each fingerprint
+of all other fingerprints that are within the threshold.  Clusters are
+then formed by taking the largest neighbour list as the first
+cluster.  Members of that cluster are removed from all the other
+neighbour lists, and the process repeated until all the fingerprints
+have been placed in a cluster.  The fingerprint that defined the
+neighbour lists is deemed the centroid of the cluster, though in a
+strict sense it isn't a true centroid so sometimes we call it a seed.
+
+Because of the way the algorithm works, there are occasionally
+singleton clusters that were just outside the threshold and so aren't
+true singletons in the sense that there was nothing else like them in
+the input set.  There's therefore an option to apply a larger
+threshold which attempts to sweep such singletons up and put them in
+the cluster whose centroid it is closest to within the threshold.
+
+The default clustering threshold is 0.3 (Tanimoto similarity 0.7)
+which we have found works well with the AlFi fingerprints. Other
+fingerprints have different distance properties, and so you should do
+some experimentation. ECFP fingerprints, from Scitegic, for example,
+generally have a markedly different distance profile from the foyfi
+fingperprints produced by AlFi.
+
+There are two output formats, both with the same information in them.
+The default puts out each cluster on a separate line. Each line has
+the cluster seed, the size of the cluster with, in brackets after it,
+the original size of the neighbour list for the seed (which may be
+higher but should never be lower) and then the cluster members in
+descending order of similarity (ascending distance) from the seed.
+The cluster size may be lower than the original neighbour list size if
+some of the neighbours have been taken be a larger cluster that was
+formed at an earlier point in the algorithm's run.  The alternative
+output format is a CSV file with one line per fingerprint containing
+the cluster number for that fingerprint, the cluster size, the cluster
+seed, the cluster member and the orginal size of the seed's neighbour
+list.
+
+Program satan
+-------------
+Satan (So Are There Any Neighbours) is a program for doing neighbour
+analysis of two fingerprint files, the probe file and the target
+file.  It was originally developed for working up assay results, where
+the probe was the set of actives and the target was the whole tested
+set.  It can also be used to examine a set of fingerprints of
+molecules that you might be thinking about buying, to see how much
+novelty it will add to your existing collection.
+
+The default mode of running satan is to produce a list for every probe
+fingerprint of fingerprints in the target file that are within a
+threshold distance (0.3 by default).  The neighbours are in ascending
+distance. In addition to this, you can specify a neighbour list size
+in which case it will stop work on each probe once the neighbour list
+has reached the specified length. In this case, all the neighbours
+will be within the threshold, but they will not necessarily be the
+only ones or the nearest ones, just the first N found.  This is
+primarily of use when comparing two collections of compounds, where
+you might want a quick assessment of how many in the first have a
+given number of neighbours in the second.
+
+The alternative mode, the COUNTS output format, lists for each probe
+fingerprint the number of target fingerprints with 0.1, 0.2... 1.0
+tanimoto distance.  This is useful for examining the distributions of
+similarities of fingerprints in the two sets.  The count in the final
+column should always be the number of fingerprints in the target set,
+or 1 less than that.  The latter case is when the target fingerprint
+set has a fingerprint of the same name as the probe fingerprint. They
+are assumed to be the same molecule, and are deemed an uninteresting
+result so removed from the output.  If you ever see a -1 in a counts
+column, then that's a sign of something odd in the input data.  Two
+fingerprints have the same name but are otherwise different. In that
+case, if the distance between the fingerprints is greater than 0.1, 1
+will be substracted from the count erroneously which might leave that
+count as -1 if there were no other target fingerprints within 0.1.
+
+Program amtec
+-------------
+Amtec (Add Molecules To Existing Clusters) does exactly that.  It's
+for when you have a small number of extra molecules and you can't be
+bothered to re-cluster the whole lot.  It just drops the new ones into
+the cluster whose centroid it's nearest, so long as it's within the
+threshold.
+
+Program cad
+-----------
+Cad (Centroid Average Distance) takes a file of clusters as output by
+cluster, and the corresponding fingerprint file, and outputs for each
+cluster the mean, mininum and maximum distances from the centroid to
+the members.
+
+Program histogram
+-----------------
+Histogram takes two fingerprint files, the probe and the target, and
+produces a histogram of distances of the probe to the target
+fingerprints, in steps of 0.05 tanimoto.  It outputs the accumulating
+numbers as the probe fingerprints are processed. It can take 2
+optional numbers on the command line which denote a subset of the
+probe file to be processed.
+
+Program merge\_fp\_files
+----------------------
+The fingerprints files produced by the AlFi program are binary and
+can't be concatenated.  The program just puts two or more together
+into a new file.  However, because it can read an arbitrary number of
+input files, it can be used to convert a file from one format to
+another, e.g. bit strings to flush format.
+
+Program reverse\_fp\_file
+-----------------------
+
+AlFi creates the fingerprints, and satan processes them, in the
+original order of the input molecule file.  When using satan in its
+mode of finding the first N fingerprints in the target set within a
+threshold, it thus puts out the earliest ones in the file.  If you're
+processing assay hits, and want to re-test compounds in the probe that
+have a number of neighbours in the tested set so as to be able to
+explore SAR better, you might prefer to have the latest neighbours in
+the file reported first.  This is particularly the case if the target
+set is your corporate collection, that has been built up over years.
+The later molecules in the file are more likely to have samples
+available for testing, and the sample is more likely to be what the
+chemist said it was when it was registered as it has had less time to
+degrade.  The simplest way to deal with this requirement within the
+existing satan framework was to write something that takes a
+fingerprint file and reverses its order to make a new file, and that's
+what reverse_fp_file does.  This is particularly necessary with the
+binary format.
+
+Program subset\_fp\_file
+----------------------
+
+The binary nature of the flush fingerprint file format makes it
+awkward to make a subset for those cases where you don't want to
+process the whole of a previously-created file, and you don't want to
+have to run the whole fingerprint generation program again.  Uses the
+names of the fingerprints for the subsetting.
+
+Running in Parallel
+===================
+
+Both cluster and satan can be run on millions of fingerprints, which
+obviously takes time.  They can therefore be run in parallel, using
+OpenMPI.  Add 'mpirun -n N' to the front of the command you would
+otherwise use, where N is the number of slave processes.
+
+As a, hopefully interesting, historical aside, the parallel processing
+for cluster wasn't originally done to increase speed.  Back in the day
+(1995 or thereabouts), the limitation was the memory of the machines
+(64M was big!) The neighbour lists needed in the first stage can
+become very large and of variable length, and they need to be
+available in memory for the second stage. It's also not possible to
+predict in advance how much memory will be required, as that's a
+function of the threshold and the homogeneity of the dataset. By
+splitting the neighbour list generation up into smaller pieces, with
+each process on a separate machine generating the neighbour lists for
+a subset of the fingerprints, much bigger input sets could be
+clustered.  The fact that it was also much faster was a happy side
+effect.
+
+Building the programs
+=====================
+
+Requires: a relatively recent version of Boost (1.55 and 1.60 are
+known to work) and an installation of OpenMPI (1.6.3 and 1.8.5 are
+known to work).
+
+To build it, use the CMakeLists.txt file in the src directory.
+
+Then cd to src and do something like:
+mkdir dev-build
+cd dev-build
+cmake -DCMAKE\_BUILD\_TYPE=DEBUG ..
+make
+
+If all goes to plan, this will make a directory src/../exe_DEBUG with the
+executables in it. These will have debugging information in them.
+
+For a release version:
+mkdir prod-build
+cd prod-build
+cmake -DCMAKE\_BUILD\_TYPE=RELEASE ..
+make
+
+and you'll get stuff in src/../exe_RELEASE which should have full
+compiler optimisation applied.
+
+If you're not wanting to use the system-supplied Boost distribution in
+/usr/include then set BOOST_ROOT to point to the location of a recent
+(>1.48) build of the Boost libraries.  On my Centos 6.5 machine, the
+system boost is 1.41 which isn't good enough. You will also probably
+need to use '-DBoost_NO_BOOST_CMAKE=TRUE' when running cmake:
+
+cmake -DCMAKE\_BUILD\_TYPE=RELEASE -DBoost\_NO\_BOOST\_CMAKE=TRUE ..
+
+These instructions have only been tested in Centos 6 and Ubuntu 14.04
+Linux systems.  I have no experience of using them on Windows or OSX,
+and no means of doing so.
+
+
+References
+==========
+(1) R Taylor, 'Simulation Analysis of Experimental Design Strategies for Screening
+Random Compounds as Potential New Drugs and Agrochemicals', JCICS, _35_,
+59-67 (1995)
+(2) D Butina, 'Unsupervised Database Clustering Based on Daylight's Fingerprint and
+Tanimoto Similarity: A Fast and Automated Way to Cluster Small and Large Data
+Sets', JCICS, _39_, 747-750 (1999)
+(3) N Blomberg, DA Cosgrove, PW Kenny, K Kolmodin, 'Design of Compound
+Libraries for Fragment Screening', JCAMD, _23_, 513-525 (2009)
+
+David Cosgrove
+AstraZeneca
+12th February 2016
+
+davidacosgroveaz@gmail.com
