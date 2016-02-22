@@ -133,7 +133,7 @@ void get_cluster_fps( vector<FingerprintBase *> &cluster_fps ,
 // ****************************************************************************
 void generate_cads( vector<FingerprintBase *> &cluster_fps ,
                     const vector<vector<string> > &clusters ,
-                    vector<tuple<double,double,double> > &cads ) {
+                    vector<boost::tuple<double,double,double> > &cads ) {
 
   vector<FingerprintBase *> curr_clus;
   for( int i = 0 , is = clusters.size() ; i < is ; ++i ) {
@@ -153,7 +153,7 @@ void generate_cads( vector<FingerprintBase *> &cluster_fps ,
           }
         }
       }
-      cads.push_back( make_tuple( sum_dist / double( num_dists ) , min_dist , max_dist ) );
+      cads.push_back( boost::make_tuple( sum_dist / double( num_dists ) , min_dist , max_dist ) );
     } else {
       cads.push_back( 0.0 );
     }
@@ -162,7 +162,7 @@ void generate_cads( vector<FingerprintBase *> &cluster_fps ,
 }
 
 // ****************************************************************************
-void write_cads( const vector<tuple<double,double,double> > &cads ,
+void write_cads( const vector<boost::tuple<double,double,double> > &cads ,
                  const vector<vector<string> > &clusters ,
                  const string &filename ) {
 
@@ -211,7 +211,7 @@ int main( int argc , char **argv ) {
         bind( &FingerprintBase::get_name , _1 ) >
         bind( &FingerprintBase::get_name , _2 ) );
 
-  vector<tuple<double,double,double> > cads; // mean, min, max
+  vector<boost::tuple<double,double,double> > cads; // mean, min, max
   generate_cads( cluster_fps , clusters , cads );
 
   write_cads( cads , clusters , cs.output_file() );
