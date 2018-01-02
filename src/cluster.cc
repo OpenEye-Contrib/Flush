@@ -865,7 +865,10 @@ void receive_new_cwd() {
 
   string new_cwd;
   DACLIB::mpi_rec_string( 0 , new_cwd );
-  chdir( new_cwd.c_str() );
+  if(chdir( new_cwd.c_str() ) < 0){
+    cerr << "ERROR : couldn't change to directory " << new_cwd << endl;
+    exit(1);
+  }
 
 }
 

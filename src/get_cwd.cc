@@ -18,11 +18,14 @@ namespace DACLIB {
 std::string get_cwd(){
 
   char *buffer = new char[MAXPATHLEN];
-  getcwd(buffer,MAXPATHLEN);
-  if(buffer != NULL){
-    std::string ret(buffer);
-    delete[] buffer;
-    return ret;
+  if(getcwd(buffer,MAXPATHLEN)){
+    if(buffer != NULL){
+      std::string ret(buffer);
+      delete[] buffer;
+      return ret;
+    } else {
+      return std::string();
+    }
   } else {
     return std::string();
   }

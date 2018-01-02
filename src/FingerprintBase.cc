@@ -299,7 +299,7 @@ void read_fp_file( const string &file , FP_FILE_FORMAT input_format ,
                    vector<FingerprintBase *> &fps ) {
 
   gzFile gzfp = 0;
-  bool byteswapping;
+  bool byteswapping = false;
   if( FLUSH_FPS == input_format || BIN_FRAG_NUMS == input_format ) {
     open_fp_file_for_reading( file , input_format , byteswapping , gzfp );
   } else {

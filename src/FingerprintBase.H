@@ -108,7 +108,7 @@ namespace DAC_FINGERPRINTS {
 
     static double tversky_alpha_;
 
-    virtual void copy_data( const FingerprintBase &fp ) {
+    void copy_data( const FingerprintBase &fp ) {
       finger_name_ = fp.finger_name_;
     }
 

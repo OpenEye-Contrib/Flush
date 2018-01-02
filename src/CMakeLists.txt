@@ -9,6 +9,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -Wall -fno-strict-aliasing -
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -W -Wall  -Wshadow -Wno-error=shadow -Wno-error=unused-function -fomit-frame-pointer -ffast-math -fvisibility=hidden -fvisibility-inlines-hidden -fPIC  -Werror " )
 
+message(${CMAKE_HOST_SYSTEM_VERSION})
+
+if( ${CMAKE_HOST_SYSTEM_VERSION} MATCHES "^4.4" )
+  message( "Hopefully, a Ubuntu 16.04 machine or similar, with a modern compiler." )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+endif()
 if( ${CMAKE_HOST_SYSTEM_VERSION} MATCHES "^3.1" )
   message( "Hopefully, the Ubuntu 14.04 machine, with a modern compiler." )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
@@ -61,7 +67,7 @@ NotHashedFingerprint.H)
 
 add_executable(satan satan.cc
 SatanSettings.cc
-${FP_SRCS} ${DACLIB_SRCS3})
+${FP_SRCS} ${DACLIB_SRCS3} ${DACLIB_INCS3} ${FP_INCS})
 
 target_link_libraries(satan ${LIBS} ${Boost_LIBRARIES}
 ${MPI_LIBRARIES} z)

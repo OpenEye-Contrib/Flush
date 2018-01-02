@@ -147,7 +147,7 @@ int main( int argc , char **argv ) {
   decode_format_string( format_string , fp_file_format , binary_file ,
                         bitstring_separator );
 
-  bool byteswapping;
+  bool byteswapping = false;
   gzFile gzfp = 0;
   try {
     if( binary_file ) {

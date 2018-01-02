@@ -155,7 +155,7 @@ void generate_cads( vector<FingerprintBase *> &cluster_fps ,
       }
       cads.push_back( boost::make_tuple( sum_dist / double( num_dists ) , min_dist , max_dist ) );
     } else {
-      cads.push_back( 0.0 );
+      cads.push_back( boost::make_tuple(0.0, 0.0, 0.0) );
     }
   }
 

@@ -122,7 +122,7 @@ protected :
   static pNHDC dist_calc_;
   static pNHTDC threshold_dist_calc_;
 
-  virtual void copy_data( const NotHashedFingerprint &fp );
+  void copy_data( const NotHashedFingerprint &fp );
 
 };
 

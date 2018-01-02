@@ -56,7 +56,7 @@ void mpi_rec_string( int source_rank , string &str );
 
 extern string BUILD_TIME; // in build_time.cc
 
-static const int FP_CHUNK_SIZE = 500000;
+// static const int FP_CHUNK_SIZE = 500000;
 
 // ****************************************************************************
 void output_neighbours_satan( unsigned int min_count ,
@@ -643,7 +643,10 @@ void receive_new_cwd() {
 
   string new_cwd;
   DACLIB::mpi_rec_string( 0 , new_cwd );
-  chdir( new_cwd.c_str() );
+  if(chdir( new_cwd.c_str() ) < 0){
+    cerr << "ERROR : couldn't change to directory " << new_cwd << endl;
+    exit(1);
+  }
 
 }
 

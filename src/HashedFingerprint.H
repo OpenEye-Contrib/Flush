@@ -135,7 +135,7 @@ protected:
   static pHDC dist_calc_;
   static pHTDC threshold_dist_calc_;
 
-  virtual void copy_data( const HashedFingerprint &fp );
+  void copy_data( const HashedFingerprint &fp );
 
   void build_fp_from_bitstring( const std::string &name ,
                                 const std::string &bitstring );
