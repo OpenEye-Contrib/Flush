@@ -25,10 +25,10 @@ def parse_arguments():
                         choices=['Morgan', 'Path'],
                         default='Morgan', help='Fingerprint type (Path or Circular/Morgan). Default=Morgan')
     parser.add_argument('-N', '--num-bits', dest='numbits',
-                        default=4096,
+                        default=4096, type=int,
                         help='Number of bits in fingerprint. Default=4096')
     parser.add_argument('-S', '--size', dest='size',
-                        default=-1,
+                        default=-1, type=int,
                         help='Max. path length for Path fingerprints (default=7),'
                         ' max. radius for Morgan fingerprints (default=3)')
 
